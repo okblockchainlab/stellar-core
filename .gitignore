@@ -82,3 +82,5 @@
 *.vcxproj.user
 **/.vs/*
 
+ok-wallet/build/*
+ok-wallet/bin/*
