@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "wallet.h"
+#include <dlfcn.h>
 
 struct pair_t {
   const char* seed;
@@ -16,9 +17,41 @@ static const pair_t test_pair2 = {
   "GA4SNMFYYT77VX7NPUXTDDVNX6FIAF2IIZEJEOFKBZ2U5GPX2OU6O7BW",
 };
 
+typedef bool (*get_address_t)(const std::string& seed, std::string& address);
 
-TEST(Hot, getAddress) {
-  stellar::Hot hot(test_pair1.seed);
+class AccountTest : public ::testing::Test {
+public:
+  static void SetUpTestCase() {
+    //FIXME: use a better path
+    wlt_mod = dlopen("./libstellar-wlt.so", RTLD_LAZY);
+    getAddress = (get_address_t)dlsym(wlt_mod, "GetAddressFromPrivateKey");
+  }
+  static void TearDownTestCase() {
+    if (NULL != wlt_mod) {
+      dlclose(wlt_mod);
+      wlt_mod = NULL;
+    }
+  }
 
-  ASSERT_STREQ(test_pair1.address, hot.address().c_str());
+  virtual void SetUp() {
+  }
+
+  virtual void TearDown() {
+  }
+
+  static void* wlt_mod;
+  static get_address_t getAddress;
+};
+void* AccountTest::wlt_mod = NULL;
+get_address_t AccountTest::getAddress = nullptr;
+
+TEST_F(AccountTest, getAddress) {
+  std::string address;
+  ASSERT_TRUE(getAddress(test_pair1.seed, address));
+
+  ASSERT_STREQ(test_pair1.address, address.c_str());
+}
+
+TEST_F(AccountTest, xxx) {
+  ASSERT_TRUE(1 < 2);
 }
