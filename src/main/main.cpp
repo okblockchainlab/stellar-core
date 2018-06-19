@@ -634,6 +634,7 @@ initializeHistories(Config& cfg, vector<string> newHistories)
     return 0;
 }
 
+extern stellar::Application::pointer myApp;
 static int
 startApp(string cfgFile, Config& cfg)
 {
@@ -643,6 +644,9 @@ startApp(string cfgFile, Config& cfg)
     Application::pointer app;
     try
     {
+      #ifdef OKWALLET
+        myApp =
+      #endif
         app = Application::create(clock, cfg, false);
 
         if (!checkInitialized(app))
@@ -720,6 +724,7 @@ main(int argc, char* const* argv)
     std::vector<std::string> metrics;
 
     int opt;
+  #ifndef OKWALLET
     while ((opt = getopt_long_only(argc, argv, "c:", stellar_core_options,
                                    nullptr)) != -1)
     {
@@ -837,6 +842,7 @@ main(int argc, char* const* argv)
             return 0;
         }
     }
+  #endif
 
     Config cfg;
     try

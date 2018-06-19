@@ -88,6 +88,7 @@ CommandHandler::CommandHandler(Application& app) : mApp(app)
     addRoute("scp", &CommandHandler::scpInfo);
     addRoute("testacc", &CommandHandler::testAcc);
     addRoute("testtx", &CommandHandler::testTx);
+    addRoute("testtx2", &CommandHandler::testTx2);
     addRoute("tx", &CommandHandler::tx);
     addRoute("upgrades", &CommandHandler::upgrades);
     addRoute("unban", &CommandHandler::unban);
@@ -190,6 +191,78 @@ CommandHandler::testTx(std::string const& params, std::string& retStr)
             from->second == "root"
                 ? TestAccount{mApp, getRoot(networkID)}
                 : TestAccount{mApp, getAccount(from->second.c_str())};
+
+        uint64_t paymentAmount = 0;
+        std::istringstream iss(amount->second);
+        iss >> paymentAmount;
+
+        root["from_name"] = from->second;
+        root["to_name"] = to->second;
+        root["from_id"] = KeyUtils::toStrKey(fromAccount.getPublicKey());
+        root["to_id"] = KeyUtils::toStrKey(toAccount.getPublicKey());
+        root["amount"] = (Json::UInt64)paymentAmount;
+
+        TransactionFramePtr txFrame;
+        if (create != retMap.end() && create->second == "true")
+        {
+            txFrame = fromAccount.tx({createAccount(toAccount, paymentAmount)});
+        }
+        else
+        {
+            txFrame = fromAccount.tx({payment(toAccount, paymentAmount)});
+        }
+
+        switch (mApp.getHerder().recvTransaction(txFrame))
+        {
+        case Herder::TX_STATUS_PENDING:
+            root["status"] = "pending";
+            break;
+        case Herder::TX_STATUS_DUPLICATE:
+            root["status"] = "duplicate";
+            break;
+        case Herder::TX_STATUS_ERROR:
+            root["status"] = "error";
+            root["detail"] =
+                xdr::xdr_to_string(txFrame->getResult().result.code());
+            break;
+        default:
+            assert(false);
+        }
+    }
+    else
+    {
+        root["status"] = "error";
+        root["detail"] = "Bad HTTP GET: try something like: "
+                         "testtx?from=root&to=bob&amount=1000000000";
+    }
+    retStr = root.toStyledString();
+}
+
+void
+CommandHandler::testTx2(std::string const& params, std::string& retStr)
+{
+    std::map<std::string, std::string> retMap;
+    http::server::server::parseParams(params, retMap);
+
+    auto to = retMap.find("to");
+    auto from = retMap.find("from");
+    auto amount = retMap.find("amount");
+    auto create = retMap.find("create");
+
+    Json::Value root;
+
+    if (to != retMap.end() && from != retMap.end() && amount != retMap.end())
+    {
+        Hash const& networkID = mApp.getNetworkID();
+
+        auto toAccount =
+            to->second == "root"
+                ? TestAccount{mApp, getRoot(networkID)}
+                : TestAccount{mApp, SecretKey::fromStrKeySeed(to->second.c_str())};
+        auto fromAccount =
+            from->second == "root"
+                ? TestAccount{mApp, getRoot(networkID)}
+                : TestAccount{mApp, SecretKey::fromStrKeySeed(from->second.c_str())};
 
         uint64_t paymentAmount = 0;
         std::istringstream iss(amount->second);

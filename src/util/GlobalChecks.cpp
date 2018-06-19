@@ -17,7 +17,9 @@ static std::thread::id mainThread = std::this_thread::get_id();
 void
 assertThreadIsMain()
 {
+  #ifndef OKWALLET
     dbgAssert(mainThread == std::this_thread::get_id());
+  #endif
 }
 
 void

@@ -18,6 +18,7 @@ static const pair_t test_pair2 = {
 };
 
 typedef bool (*get_address_t)(const std::string& seed, std::string& address);
+typedef std::vector<uint8_t> (*produce_unsigned_tx_t)(const std::string& from, const std::string& to, const std::string& amount);
 
 class AccountTest : public ::testing::Test {
 public:
@@ -25,6 +26,7 @@ public:
     //FIXME: use a better path
     wlt_mod = dlopen("./libstellar-wlt.so", RTLD_LAZY);
     getAddress = (get_address_t)dlsym(wlt_mod, "GetAddressFromPrivateKey");
+    produceUnsignedTx = (produce_unsigned_tx_t)dlsym(wlt_mod, "produceUnsignedTx");
   }
   static void TearDownTestCase() {
     if (NULL != wlt_mod) {
@@ -41,9 +43,11 @@ public:
 
   static void* wlt_mod;
   static get_address_t getAddress;
+  static produce_unsigned_tx_t produceUnsignedTx;
 };
 void* AccountTest::wlt_mod = NULL;
 get_address_t AccountTest::getAddress = nullptr;
+produce_unsigned_tx_t AccountTest::produceUnsignedTx = nullptr;
 
 TEST_F(AccountTest, getAddress) {
   std::string address;
@@ -53,5 +57,10 @@ TEST_F(AccountTest, getAddress) {
 }
 
 TEST_F(AccountTest, xxx) {
-  ASSERT_TRUE(1 < 2);
+  std::vector<uint8_t> expect_tx = {1, 2, 3};
+  auto unsigned_tx = produceUnsignedTx(test_pair1.address, test_pair2.address, "10");
+  ASSERT_TRUE(unsigned_tx.size() > 0);
+  //for (int i = 0; i < unsigned_tx.size(); i++) {
+  //  printf("%02x ", unsigned_tx[i]);
+  //}
 }
