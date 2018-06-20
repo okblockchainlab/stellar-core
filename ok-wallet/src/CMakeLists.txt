@@ -281,6 +281,7 @@ set(STELLAR_CORE_SOURCE
 
 set(WALLET_LIB_SOURCE
   wallet.cpp
+  app_wrapper.cpp
 )
 
 include_directories(${PROJECT_SOURCE_DIR}/..)

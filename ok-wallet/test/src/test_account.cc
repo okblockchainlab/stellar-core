@@ -18,7 +18,7 @@ static const pair_t test_pair2 = {
 };
 
 typedef bool (*get_address_t)(const std::string& seed, std::string& address);
-typedef std::vector<uint8_t> (*produce_unsigned_tx_t)(const std::string& from, const std::string& to, const std::string& amount);
+typedef bool (*produce_unsigned_tx_t)(const std::string& from, const std::string& to, const std::string& amount, std::vector<uint8_t>& utx);
 
 class AccountTest : public ::testing::Test {
 public:
@@ -58,8 +58,10 @@ TEST_F(AccountTest, getAddress) {
 
 TEST_F(AccountTest, xxx) {
   std::vector<uint8_t> expect_tx = {1, 2, 3};
-  auto unsigned_tx = produceUnsignedTx(test_pair1.address, test_pair2.address, "10");
-  ASSERT_TRUE(unsigned_tx.size() > 0);
+  std::vector<uint8_t> utx;
+
+  ASSERT_TRUE(produceUnsignedTx(test_pair1.address, test_pair2.address, "100", utx));
+  ASSERT_TRUE(utx.size() > 0);
   //for (int i = 0; i < unsigned_tx.size(); i++) {
   //  printf("%02x ", unsigned_tx[i]);
   //}

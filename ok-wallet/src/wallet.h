@@ -27,5 +27,5 @@ signTransaction(const uint8_t* unsigned_tx, const size_t size);
 //hot
 extern "C"
 __attribute__ ((visibility("default")))
-std::vector<uint8_t>
-produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount);
+bool
+produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount, std::vector<uint8_t>& utx);

@@ -186,7 +186,7 @@ usage(int err = 1)
     exit(err);
 }
 
-static void
+void
 setNoListen(Config& cfg)
 {
     // prevent opening up a port for other peers
@@ -243,7 +243,7 @@ sendCommand(std::string const& command, const std::vector<char*>& rest,
     }
 }
 
-static bool
+bool
 checkInitialized(Application::pointer app)
 {
     try
@@ -366,7 +366,7 @@ catchupAt(Application::pointer app, uint32_t at, Json::Value& catchupInfo)
     return catchup(app, at, 0, catchupInfo);
 }
 
-static int
+int
 catchupComplete(Application::pointer app, Json::Value& catchupInfo)
 {
     return catchup(app, CatchupConfiguration::CURRENT,
@@ -634,7 +634,6 @@ initializeHistories(Config& cfg, vector<string> newHistories)
     return 0;
 }
 
-extern stellar::Application::pointer myApp;
 static int
 startApp(string cfgFile, Config& cfg)
 {
@@ -644,9 +643,6 @@ startApp(string cfgFile, Config& cfg)
     Application::pointer app;
     try
     {
-      #ifdef OKWALLET
-        myApp =
-      #endif
         app = Application::create(clock, cfg, false);
 
         if (!checkInitialized(app))
@@ -724,7 +720,6 @@ main(int argc, char* const* argv)
     std::vector<std::string> metrics;
 
     int opt;
-  #ifndef OKWALLET
     while ((opt = getopt_long_only(argc, argv, "c:", stellar_core_options,
                                    nullptr)) != -1)
     {
@@ -842,7 +837,6 @@ main(int argc, char* const* argv)
             return 0;
         }
     }
-  #endif
 
     Config cfg;
     try

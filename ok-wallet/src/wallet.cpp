@@ -1,17 +1,9 @@
 #include "wallet.h"
 #include "crypto/SecretKey.h"
-#include "main/Config.h"
 #include "crypto/KeyUtils.h"
-#include "test/TxTests.h"
-#include "util/Timer.h"
-#include "main/ApplicationImpl.h"
-#include "database/Database.h"
-#include "ledger/AccountFrame.h"
-#include "overlay/StellarXDR.h"
 #include "xdrpp/marshal.h"
-#include "util/Logging.h"
-#include "test/TestAccount.h"
-#include <cstdlib>
+#include "app_wrapper.h"
+#include "test/TxTests.h"
 
 namespace stellar {
   Cold::Cold(const char* seed): seed_(seed) {
@@ -33,60 +25,31 @@ bool GetAddressFromPrivateKey(const std::string& seed, std::string& address)
   return true;
 }
 
-int main(int argc, char* const* argv);
-
-#include <thread>
-
-namespace stellar {
-Application::pointer myApp = nullptr;
-}
 
 extern "C"
-std::vector<uint8_t>
-produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount)
+bool
+produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount, std::vector<uint8_t>& utx)
 {
-  char* argv[] = {
-    "stellar-core",
-    //"--newdb",
-    //"--ll", "trace",
-    //"--catchup-complete",
-  };
+  utx.clear();
 
-  std::thread main_thread(main, 2, argv);
-  //main(1, argv);
-  //if (0 != main(2, argv))
-   // return {};
-     std::this_thread::sleep_for(std::chrono::seconds(10));
+  AppWrapper aw;
+  if (!aw.update_ledger()) {
+    return false;
+  }
 
-  //stellar::Config cfg;
-  //FIXME: use a better config path.
-  //FIXME: load config when initializing?
-  //cfg.load("./stellar-core.cfg");
-  //if (cfg.LOG_FILE_PATH.size())
-      //stellar::Logging::setLoggingToFile(cfg.LOG_FILE_PATH);
-  //stellar::Logging::setLogLevel(el::Level::Info, nullptr);
-
-  //if (cfg.LOG_FILE_PATH.size()) {
-    //printf("log file: %s\n", cfg.LOG_FILE_PATH.c_str());
-    //stellar::Logging::setLoggingToFile(cfg.LOG_FILE_PATH);
-  //}
-  //stellar::Logging::setLogLevel(el::Level::Debug, nullptr);
-
-  //uint8_t ver;
-  //std::vector<uint8_t> from_pkey;
   stellar::PublicKey from_pkey = stellar::KeyUtils::fromStrKey<stellar::PublicKey>(from);
   stellar::PublicKey to_pkey = stellar::KeyUtils::fromStrKey<stellar::PublicKey>(to);
 
-  std::vector<stellar::Operation> ops = {stellar::txtest::payment(to_pkey, std::atoll(amount.c_str()))};
-
-  auto from_acc = stellar::txtest::loadAccount(from_pkey, *stellar::myApp, false);
+  auto from_acc = aw.loadAccount(from_pkey);
   if (!from_acc) {
-      return {};
+      return false;
   }
+
+  std::vector<stellar::Operation> ops = {stellar::txtest::payment(to_pkey, std::atoll(amount.c_str()))};
 
   auto e = stellar::TransactionEnvelope{};
   e.tx.sourceAccount = from_pkey;
-  //TODO: is there need to config basefee?
+  //TODO: does here need to config basefee?
   //I use value of app.getLedgerManager().getTxFee() for simplify the code,
   //which is 100 for now.
   e.tx.fee = static_cast<uint32_t>(
@@ -94,15 +57,8 @@ produceUnsignedTx(const std::string& from, const std::string& to, const std::str
   e.tx.seqNum = /*from_acc.nextSequenceNumber();*/from_acc->getSeqNum();
   std::copy(std::begin(ops), std::end(ops), std::back_inserter(e.tx.operations));
 
-  auto res = xdr::xdr_to_opaque(e);
-
-  stellar::myApp->gracefulStop();
-  while (stellar::myApp->getClock().crank(true))
-      ;
-  stellar::myApp.reset();
-  main_thread.join();
-
- return res;
+  utx = xdr::xdr_to_opaque(e);
+  return true;
 }
 
   /* keypoint:
