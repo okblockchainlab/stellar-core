@@ -9,24 +9,28 @@
 #include "main/ExternalQueue.h"
 #include "main/Maintainer.h"
 
+void loadConfig(const std::string& net_type, stellar::Config& cfg);
+
 namespace stellar {
-void setNoListen(Config& cfg);
 int catchupComplete(stellar::Application::pointer app, Json::Value& catchupInfo);
 bool checkInitialized(stellar::Application::pointer app);
 }
 
 
-AppWrapper::AppWrapper() : mClock(stellar::VirtualClock::REAL_TIME) {
-  stellar::Logging::init(); //TODO: 是否可以多次初始化？
-  if (sodium_init() != 0) //TODO: 是否可以多次初始化
+AppWrapper::AppWrapper(const std::string& net_type) : mClock(stellar::VirtualClock::REAL_TIME) {
+  stellar::Logging::init();
+  // yes you really have to do this 3 times
+  stellar::Logging::setLogLevel(el::Level::Error, nullptr);
+  stellar::Logging::setLogLevel(el::Level::Error, nullptr);
+  stellar::Logging::setLogLevel(el::Level::Error, nullptr);
+
+  if (sodium_init() < 0)
   {
     LOG(FATAL) << "Could not initialize crypto";
     return ;
   }
 
-  mCfg.load("stellar-core.cfg");
-  mCfg.NTP_SERVER.clear();
-  setNoListen(mCfg);
+  loadConfig(net_type, mCfg);
 
   if (mCfg.LOG_FILE_PATH.size()) {
     stellar::Logging::setLoggingToFile(mCfg.LOG_FILE_PATH);

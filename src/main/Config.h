@@ -207,7 +207,7 @@ class Config : public std::enable_shared_from_this<Config>
 
     Config();
 
-    void load(std::string const& filename);
+    void load(std::string const& filename, std::istream& input = std::cin);
 
     std::string toShortString(PublicKey const& pk) const;
     std::string toStrKey(PublicKey const& pk, bool& isAlias) const;

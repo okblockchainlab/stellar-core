@@ -4,6 +4,9 @@
 #include "xdrpp/marshal.h"
 #include "app_wrapper.h"
 #include "test/TxTests.h"
+#include "crypto/SHA.h"
+
+void loadConfig(const std::string& net_type, stellar::Config& cfg);
 
 namespace stellar {
   Cold::Cold(const char* seed): seed_(seed) {
@@ -28,11 +31,11 @@ bool GetAddressFromPrivateKey(const std::string& seed, std::string& address)
 
 extern "C"
 bool
-produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount, std::vector<uint8_t>& utx)
+produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount, const std::string& net_type, std::vector<uint8_t>& utx)
 {
   utx.clear();
 
-  AppWrapper aw;
+  AppWrapper aw(net_type);
   if (!aw.update_ledger()) {
     return false;
   }
@@ -58,6 +61,26 @@ produceUnsignedTx(const std::string& from, const std::string& to, const std::str
   std::copy(std::begin(ops), std::end(ops), std::back_inserter(e.tx.operations));
 
   utx = xdr::xdr_to_opaque(e);
+  return true;
+}
+
+extern "C"
+bool
+signTransaction(const uint8_t* unsigned_tx, const size_t size, const std::string& seed, const std::string& net_type, std::vector<uint8_t>& stx)
+{
+  stellar::Config cfg;
+  loadConfig(net_type, cfg);
+  const auto network_id = stellar::sha256(cfg.NETWORK_PASSPHRASE); //app.getNetworkID
+
+  auto from_skey = stellar::SecretKey::fromStrKeySeed(seed);
+
+  stellar::TransactionEnvelope envelope;
+  std::vector<uint8_t> binBlob(unsigned_tx, unsigned_tx + size);
+  xdr::xdr_from_opaque(binBlob, envelope);
+  auto t = stellar::TransactionFrame::makeTransactionFromWire(network_id, envelope);
+  t->addSignature(from_skey);
+
+  stx = xdr::xdr_to_opaque(t->getEnvelope());
   return true;
 }
 

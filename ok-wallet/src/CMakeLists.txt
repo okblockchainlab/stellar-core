@@ -282,6 +282,7 @@ set(STELLAR_CORE_SOURCE
 set(WALLET_LIB_SOURCE
   wallet.cpp
   app_wrapper.cpp
+	config.cpp
 )
 
 include_directories(${PROJECT_SOURCE_DIR}/..)
@@ -324,4 +325,4 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 
 enable_testing()
 include(add_test.cmake)
-cxx_test(test_account "" gtest)
+cxx_test(test_okwallet "" gtest)

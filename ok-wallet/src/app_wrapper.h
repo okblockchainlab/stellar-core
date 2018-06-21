@@ -5,7 +5,7 @@
 
 class AppWrapper {
 public:
-  AppWrapper();
+  AppWrapper(const std::string& net_type);
   ~AppWrapper();
 
   bool update_ledger();

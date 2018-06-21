@@ -237,7 +237,7 @@ Config::loadQset(std::shared_ptr<cpptoml::toml_group> group, SCPQuorumSet& qset,
 }
 
 void
-Config::load(std::string const& filename)
+Config::load(std::string const& filename, std::istream& input)
 {
     LOG(DEBUG) << "Loading config from: " << filename;
     try
@@ -245,7 +245,7 @@ Config::load(std::string const& filename)
         cpptoml::toml_group g;
         if (filename == "-")
         {
-            cpptoml::parser p(std::cin);
+            cpptoml::parser p(input);
             g = p.parse();
         }
         else
