@@ -1,4 +1,5 @@
 #include <sstream>
+#include <regex>
 #include "main/Config.h"
 
 namespace stellar {
@@ -13,9 +14,9 @@ KNOWN_PEERS=[\n\
 \"core-testnet2.stellar.org\",\n\
 \"core-testnet3.stellar.org\"]\n\
 \n\
-DATABASE=\"sqlite3://stellar-test.db\"\n\
+DATABASE=\"sqlite3://<DATA_DIR>/stellar-test.db\"\n\
 \n\
-BUCKET_DIR_PATH=\"buckets-test\"\n\
+BUCKET_DIR_PATH=\"<DATA_DIR>/buckets-test\"\n\
 \n\
 UNSAFE_QUORUM=false\n\
 \n\
@@ -46,8 +47,8 @@ get=\"curl -sf http://s3-eu-west-1.amazonaws.com/history.stellar.org/prd/core-te
 
 static std::string main_config("\
 LOG_FILE_PATH=\"stellar-core.log\"\n\
-BUCKET_DIR_PATH=\"buckets\"\n\
-DATABASE=\"sqlite3://stellar.db\"\n\
+BUCKET_DIR_PATH=\"<DATA_DIR>/buckets\"\n\
+DATABASE=\"sqlite3://<DATA_DIR>/stellar.db\"\n\
 \n\
 NETWORK_PASSPHRASE=\"Public Global Stellar Network ; September 2015\"\n\
 \n\
@@ -130,21 +131,24 @@ VALIDATORS=[\n\
 ]\n\
 ");
 
-void loadConfig(const std::string& net_type, stellar::Config& cfg)
+void loadConfig(const std::string& net_type, const char* data_dir, stellar::Config& cfg)
 {
+  std::string config_str;
+  std::regex datadir_re("<DATA_DIR>");
+
   if ("main" == net_type) {
-    std::istringstream cfg_stream(main_config);
-    cfg.load("-", cfg_stream);
+    config_str = std::regex_replace(main_config, datadir_re, data_dir);
   }
   else if ("testnet" == net_type) {
-    std::istringstream cfg_stream(test_config);
-    cfg.load("-", cfg_stream);
+    config_str = std::regex_replace(test_config, datadir_re, data_dir);
   }
   else {
     assert("unknown net type." && false);
     return;
   }
 
+  std::istringstream cfg_stream(config_str);
+  cfg.load("-", cfg_stream);
   cfg.NTP_SERVER.clear();
   stellar::setNoListen(cfg);
 }

@@ -294,6 +294,8 @@ include_directories(${PROJECT_SOURCE_DIR}/../lib/cereal/include)
 include_directories(${PROJECT_SOURCE_DIR}/../lib/libmedida/src)
 include_directories(${PROJECT_SOURCE_DIR}/../lib/soci/src/core)
 include_directories(${PROJECT_SOURCE_DIR}/../lib/autocheck/include)
+include_directories($ENV{JAVA_HOME}/include)
+include_directories($ENV{JAVA_HOME}/include/darwin)
 
 link_directories(../../lib)
 

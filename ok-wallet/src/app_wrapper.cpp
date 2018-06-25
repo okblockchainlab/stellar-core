@@ -9,7 +9,7 @@
 #include "main/ExternalQueue.h"
 #include "main/Maintainer.h"
 
-void loadConfig(const std::string& net_type, stellar::Config& cfg);
+void loadConfig(const std::string& net_type, const char* data_dir, stellar::Config& cfg);
 
 namespace stellar {
 int catchupComplete(stellar::Application::pointer app, Json::Value& catchupInfo);
@@ -17,7 +17,7 @@ bool checkInitialized(stellar::Application::pointer app);
 }
 
 
-AppWrapper::AppWrapper(const std::string& net_type) : mClock(stellar::VirtualClock::REAL_TIME) {
+AppWrapper::AppWrapper(const std::string& net_type, const char* data_dir, bool start) : mClock(stellar::VirtualClock::REAL_TIME) {
   stellar::Logging::init();
   // yes you really have to do this 3 times
   stellar::Logging::setLogLevel(el::Level::Error, nullptr);
@@ -30,36 +30,39 @@ AppWrapper::AppWrapper(const std::string& net_type) : mClock(stellar::VirtualClo
     return ;
   }
 
-  loadConfig(net_type, mCfg);
+  loadConfig(net_type, data_dir, mCfg);
 
   if (mCfg.LOG_FILE_PATH.size()) {
     stellar::Logging::setLoggingToFile(mCfg.LOG_FILE_PATH);
   }
 
-  auto app = stellar::Application::create(mClock, mCfg, false);
-  //if (!stellar::checkInitialized(app)) {
-    //mApp = stellar::Application::create(clock, cfg, true);
-  //}
+  bool newdb = false;
+  const auto& init_ffile = data_dir + std::string("/.") + net_type + "_db_initialized";
+  if (access(init_ffile.c_str(), R_OK) < 0) {
+    newdb = true;
+  }
+
+  auto app = stellar::Application::create(mClock, mCfg, newdb);
+  assert(true == stellar::checkInitialized(app));
 
   if (!app->getHistoryArchiveManager().checkSensibleConfig()) {
     return ;
   }
 
-  //mApp->applyCfgCommands();
+  if (start) {
+    app->applyCfgCommands();
+    app->start();
+  }
+  else {
+    stellar::ExternalQueue ps(*app);
+    ps.setInitialCursors(mCfg.KNOWN_CURSORS);
+    app->getMaintainer().start();
+  }
 
-  stellar::ExternalQueue ps(*app);
-  ps.setInitialCursors(mCfg.KNOWN_CURSORS);
-  app->getMaintainer().start();
-  //mApp->start();
+  if (newdb) {
+    fopen(init_ffile.c_str(), "w");
+  }
 
-
-     //std::this_thread::sleep_for(std::chrono::seconds(10));
-
-  //mApp->gracefulStop();
-  //while (mApp->getClock().crank(true)) ;
-  //mApp.reset();
-
-  //printf("fuck: app: %x\n", app.get());
   mApp = std::move(app);
 }
 
@@ -71,6 +74,11 @@ AppWrapper::~AppWrapper() {
   while (mApp->getClock().crank(true))
       ;
   mApp.reset();
+}
+
+stellar::Application::pointer AppWrapper::app()
+{
+  return mApp;
 }
 
 bool AppWrapper::update_ledger() {

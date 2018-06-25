@@ -5,8 +5,10 @@
 
 class AppWrapper {
 public:
-  AppWrapper(const std::string& net_type);
+  AppWrapper(const std::string& net_type, const char* data_dir, bool start = false);
   ~AppWrapper();
+
+  stellar::Application::pointer app();
 
   bool update_ledger();
 
