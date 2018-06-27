@@ -299,9 +299,9 @@ include_directories($ENV{JAVA_HOME}/include/darwin)
 
 link_directories(../../lib)
 
-add_library(stellar-wlt MODULE ${STELLAR_CORE_SOURCE} ${WALLET_LIB_SOURCE})
-target_link_libraries(stellar-wlt xdrpp libsodium soci medida 3rdparty pq)
-add_dependencies(stellar-wlt xdrpp libsodium stellar_core)
+add_library(stellar-core SHARED ${STELLAR_CORE_SOURCE} ${WALLET_LIB_SOURCE})
+target_link_libraries(stellar-core xdrpp libsodium soci medida 3rdparty pq)
+add_dependencies(stellar-core xdrpp libsodium stellar_core)
 
 ################################################################################
 ExternalProject_Add (proj_gtest

@@ -20,12 +20,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 add_definitions(-DOKWALLET)
 
+add_definitions(-DELPP_DISABLE_LOGS) #disable stellar-core log
+
 enable_testing()
 
 link_libraries(dl)
 
 include(ExternalProject)
 add_subdirectory(src)
-#add_subdirectory(test/src)
 
 #FIXME: `make` will make testcase too, but `make test` does not work.

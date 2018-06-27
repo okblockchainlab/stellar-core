@@ -26,7 +26,7 @@ class OKWalletTest : public ::testing::Test {
 public:
   static void SetUpTestCase() {
     //FIXME: use a better path
-    wlt_mod = dlopen("./libstellar-wlt.so", RTLD_LAZY);
+    wlt_mod = dlopen("./libstellar-core.dylib", RTLD_LAZY);
     getAddress = (get_address_t)dlsym(wlt_mod, "GetAddressFromPrivateKey");
     produceUnsignedTx = (produce_unsigned_tx_t)dlsym(wlt_mod, "produceUnsignedTx");
     signTransaction = (sign_transaction_t)dlsym(wlt_mod, "signTransaction");

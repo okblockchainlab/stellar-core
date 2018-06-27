@@ -301,32 +301,3 @@ Java_com_okcoin_vault_jni_stellar_Stellarj_execute(JNIEnv *env, jclass, jstring 
 
   return jobjectArray();
 }
-  /* keypoint:
-
-  Config cfg;
-  cfg.load(cfgFile)
-
-  createPaymentTx //签了名的
-
-  //签名
-  std::vector<uint8_t> binBlob;
-  xdr::xdr_from_opaque(binBlob, envelope);
-  auto res = TransactionFrame::makeTransactionFromWire(app.getNetworkID(), e);
-  res->addSignature(from);
-
-  xdr::xdr_to_opaque (e) //TransactionEnvelope to bytes
-  xdr_argpack_archive
-
-  getAccount
-  loadAccount ->AccountFrame::pointer
-  acc->getSeqNum
-  Application::create
-
-      app->gracefulStop();
-      while (clock.crank(true))
-          ;
-
-  startApp
-
-  broadcastMessage
-  */
