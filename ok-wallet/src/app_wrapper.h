@@ -9,6 +9,7 @@ public:
   ~AppWrapper();
 
   stellar::Application::pointer app();
+  stellar::VirtualClock& clock() {return mClock;}
 
   bool update_ledger();
 

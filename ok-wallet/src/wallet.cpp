@@ -10,7 +10,7 @@
 #include "com_okcoin_vault_jni_stellar_Stellarj.h"
 #include <regex>
 
-void loadConfig(const std::string& net_type, const char* data_dir, stellar::Config& cfg);
+void loadConfig(const std::string& net_type, const char* data_dir, bool listen, stellar::Config& cfg);
 
 std::string bytes2string(const std::vector<uint8_t>& byte_vec)
 {
@@ -167,7 +167,7 @@ bool
 signTransaction(const std::vector<uint8_t>& utx, const std::string& seed, const std::string& net_type, const char* data_dir, std::vector<uint8_t>& stx)
 {
   stellar::Config cfg;
-  loadConfig(net_type, data_dir, cfg);
+  loadConfig(net_type, data_dir, false, cfg);
   const auto network_id = stellar::sha256(cfg.NETWORK_PASSPHRASE); //app.getNetworkID
 
   auto from_skey = stellar::SecretKey::fromStrKeySeed(seed);
@@ -217,6 +217,16 @@ bool commitTransaction(const std::vector<uint8_t>& stx, const std::string& net_t
 
   output << "}";
   result_str = output.str();
+
+  if (success) {
+    printf("app is running. You can press ctrl+C to stop it.\n");
+    auto& io = aw.clock().getIOService();
+    asio::io_service::work mainWork(io);
+    while (!io.stopped()) {
+        aw.clock().crank();
+    }
+  }
+
   return success;
 }
 

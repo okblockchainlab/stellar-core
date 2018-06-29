@@ -131,7 +131,7 @@ VALIDATORS=[\n\
 ]\n\
 ");
 
-void loadConfig(const std::string& net_type, const char* data_dir, stellar::Config& cfg)
+void loadConfig(const std::string& net_type, const char* data_dir, bool listen, stellar::Config& cfg)
 {
   std::string config_str;
   std::regex datadir_re("<DATA_DIR>");
@@ -149,6 +149,8 @@ void loadConfig(const std::string& net_type, const char* data_dir, stellar::Conf
 
   std::istringstream cfg_stream(config_str);
   cfg.load("-", cfg_stream);
-  cfg.NTP_SERVER.clear();
-  stellar::setNoListen(cfg);
+  if (!listen) {
+    cfg.NTP_SERVER.clear();
+    stellar::setNoListen(cfg);
+  }
 }

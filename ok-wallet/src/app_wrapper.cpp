@@ -9,7 +9,7 @@
 #include "main/ExternalQueue.h"
 #include "main/Maintainer.h"
 
-void loadConfig(const std::string& net_type, const char* data_dir, stellar::Config& cfg);
+void loadConfig(const std::string& net_type, const char* data_dir, bool listen, stellar::Config& cfg);
 
 namespace stellar {
 int catchupComplete(stellar::Application::pointer app, Json::Value& catchupInfo);
@@ -30,7 +30,7 @@ AppWrapper::AppWrapper(const std::string& net_type, const char* data_dir, bool s
     return ;
   }
 
-  loadConfig(net_type, data_dir, mCfg);
+  loadConfig(net_type, data_dir, start ? true : false, mCfg);
 
   if (mCfg.LOG_FILE_PATH.size()) {
     stellar::Logging::setLoggingToFile(mCfg.LOG_FILE_PATH);
