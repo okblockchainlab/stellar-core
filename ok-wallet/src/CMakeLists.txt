@@ -1,51 +1,23 @@
+set($ENV{CXXFLAGS} "$ENV{CXXFLAGS} -fPIC")
+set($ENV{CFLAGS} "$ENV{CFLAGS} -fPIC")
+set($ENV{CC} "$ENV{CC} -fPIC")
+
 ExternalProject_Add (proj_stellar_core
 	PREFIX ${PROJECT_SOURCE_DIR}/..
 	SOURCE_DIR ${PROJECT_SOURCE_DIR}/..
 	INSTALL_DIR ${PROJECT_BINARY_DIR}/deps-install
 	TMP_DIR ${PROJECT_BINARY_DIR}/deps-tmp/stellar-core
 	STAMP_DIR ${PROJECT_BINARY_DIR}/deps-stamp/stellar-core
-	CONFIGURE_COMMAND COMMAND <SOURCE_DIR>/autogen.sh COMMAND <SOURCE_DIR>/configure --prefix=<INSTALL_DIR>
+	CONFIGURE_COMMAND COMMAND <SOURCE_DIR>/autogen.sh COMMAND CXXFLAGS=-fPIC CFLAGS=-fPIC <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> --disable-postgres --enable-shared=yes
 	INSTALL_COMMAND ""
 	BUILD_IN_SOURCE 1
 )
 ExternalProject_Get_Property(proj_stellar_core source_dir)
-add_library(stellar_core STATIC IMPORTED)
-set_target_properties(stellar_core PROPERTIES
+add_library(stellar_core_deps STATIC IMPORTED)
+set_target_properties(stellar_core_deps PROPERTIES
 	IMPORTED_LOCATION ${source_dir}/src/stellar-core
 )
-add_dependencies(stellar_core proj_stellar_core)
-
-ExternalProject_Add (proj_xdrpp
-	PREFIX ${PROJECT_SOURCE_DIR}/../lib/xdrpp
-	SOURCE_DIR ${PROJECT_SOURCE_DIR}/../lib/xdrpp
-	INSTALL_DIR ${PROJECT_BINARY_DIR}/deps-install
-	TMP_DIR ${PROJECT_BINARY_DIR}/deps-tmp/xdrpp
-	STAMP_DIR ${PROJECT_BINARY_DIR}/deps-stamp/xdrpp
-	CONFIGURE_COMMAND COMMAND <SOURCE_DIR>/autogen.sh COMMAND <SOURCE_DIR>/configure --prefix=<INSTALL_DIR>
-	BUILD_IN_SOURCE 1
-)
-ExternalProject_Get_Property(proj_xdrpp install_dir)
-add_library(xdrpp STATIC IMPORTED)
-set_target_properties(xdrpp PROPERTIES
-	IMPORTED_LOCATION ${install_dir}/lib/libxdrpp.a
-)
-add_dependencies(xdrpp proj_xdrpp)
-
-ExternalProject_Add (proj_libsodium
-	PREFIX ${PROJECT_SOURCE_DIR}/../lib/libsodium
-	SOURCE_DIR ${PROJECT_SOURCE_DIR}/../lib/libsodium
-	INSTALL_DIR ${PROJECT_BINARY_DIR}/deps-install
-	TMP_DIR ${PROJECT_BINARY_DIR}/deps-tmp/libsodium
-	STAMP_DIR ${PROJECT_BINARY_DIR}/deps-stamp/libsodium
-	CONFIGURE_COMMAND COMMAND <SOURCE_DIR>/autogen.sh COMMAND <SOURCE_DIR>/configure --prefix=<INSTALL_DIR>
-	BUILD_IN_SOURCE 1
-)
-ExternalProject_Get_Property(proj_libsodium install_dir)
-add_library(libsodium STATIC IMPORTED)
-set_target_properties(libsodium PROPERTIES
-	IMPORTED_LOCATION ${install_dir}/lib/libsodium.a
-)
-add_dependencies(libsodium proj_libsodium)
+add_dependencies(stellar_core_deps proj_stellar_core)
 
 ################################################################################
 
@@ -282,11 +254,12 @@ set(STELLAR_CORE_SOURCE
 set(WALLET_LIB_SOURCE
   wallet.cpp
   app_wrapper.cpp
-	config.cpp
+  config.cpp
 )
 
 include_directories(${PROJECT_SOURCE_DIR}/..)
 include_directories(${PROJECT_SOURCE_DIR}/../lib)
+include_directories(${PROJECT_SOURCE_DIR}/../lib/libsodium/src/libsodium/include)
 include_directories(${PROJECT_SOURCE_DIR}/../lib/xdrpp)
 include_directories(${PROJECT_SOURCE_DIR}/../src)
 include_directories(${PROJECT_SOURCE_DIR}/../lib/asio/asio/include)
@@ -295,13 +268,19 @@ include_directories(${PROJECT_SOURCE_DIR}/../lib/libmedida/src)
 include_directories(${PROJECT_SOURCE_DIR}/../lib/soci/src/core)
 include_directories(${PROJECT_SOURCE_DIR}/../lib/autocheck/include)
 include_directories($ENV{JAVA_HOME}/include)
-include_directories($ENV{JAVA_HOME}/include/darwin)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  include_directories($ENV{JAVA_HOME}/include/darwin)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  include_directories($ENV{JAVA_HOME}/include/linux)
+endif()
 
-link_directories(../../lib)
+link_directories(${PROJECT_SOURCE_DIR}/../lib)
+link_directories(${PROJECT_SOURCE_DIR}/../lib/libsodium/src/libsodium/.libs)
+link_directories(${PROJECT_SOURCE_DIR}/../lib/xdrpp/xdrpp)
 
 add_library(stellar-core SHARED ${STELLAR_CORE_SOURCE} ${WALLET_LIB_SOURCE})
-target_link_libraries(stellar-core xdrpp libsodium soci medida 3rdparty pq)
-add_dependencies(stellar-core xdrpp libsodium stellar_core)
+target_link_libraries(stellar-core xdrpp sodium soci medida 3rdparty pq)
+add_dependencies(stellar-core stellar_core_deps)
 
 ################################################################################
 ExternalProject_Add (proj_gtest

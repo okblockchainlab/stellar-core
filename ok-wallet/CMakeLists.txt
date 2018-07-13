@@ -25,6 +25,7 @@ add_definitions(-DELPP_DISABLE_LOGS) #disable stellar-core log
 enable_testing()
 
 link_libraries(dl)
+link_libraries(pthread)
 
 include(ExternalProject)
 add_subdirectory(src)
