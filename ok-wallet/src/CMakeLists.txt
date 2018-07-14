@@ -8,7 +8,7 @@ ExternalProject_Add (proj_stellar_core
 	INSTALL_DIR ${PROJECT_BINARY_DIR}/deps-install
 	TMP_DIR ${PROJECT_BINARY_DIR}/deps-tmp/stellar-core
 	STAMP_DIR ${PROJECT_BINARY_DIR}/deps-stamp/stellar-core
-	CONFIGURE_COMMAND COMMAND <SOURCE_DIR>/autogen.sh COMMAND CXXFLAGS=-fPIC CFLAGS=-fPIC <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> --disable-postgres --enable-shared=yes
+	CONFIGURE_COMMAND COMMAND <SOURCE_DIR>/autogen.sh COMMAND CXXFLAGS=-fPIC CFLAGS=-fPIC <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> --disable-postgres --enable-shared=yes --disable-pie
 	INSTALL_COMMAND ""
 	BUILD_IN_SOURCE 1
 )
@@ -279,7 +279,7 @@ link_directories(${PROJECT_SOURCE_DIR}/../lib/libsodium/src/libsodium/.libs)
 link_directories(${PROJECT_SOURCE_DIR}/../lib/xdrpp/xdrpp)
 
 add_library(stellar-core SHARED ${STELLAR_CORE_SOURCE} ${WALLET_LIB_SOURCE})
-target_link_libraries(stellar-core xdrpp sodium soci medida 3rdparty pq)
+target_link_libraries(stellar-core xdrpp libsodium.a soci medida 3rdparty libpq.a)
 add_dependencies(stellar-core stellar_core_deps)
 
 ################################################################################
