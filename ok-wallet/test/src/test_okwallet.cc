@@ -25,8 +25,12 @@ typedef bool (*commit_transaction_t)(const std::vector<uint8_t>& stx, const std:
 class OKWalletTest : public ::testing::Test {
 public:
   static void SetUpTestCase() {
-    //FIXME: use a better path
-    wlt_mod = dlopen("./libstellar-core.dylib", RTLD_LAZY);
+    #ifdef __APPLE__
+    const char* dll_path = "./libstellar-core.dylib";
+    #elif __linux__
+    const char* dll_path = "./libstellar-core.so";
+    #endif
+    wlt_mod = dlopen(dll_path, RTLD_LAZY);
     getAddress = (get_address_t)dlsym(wlt_mod, "GetAddressFromPrivateKey");
     produceUnsignedTx = (produce_unsigned_tx_t)dlsym(wlt_mod, "produceUnsignedTx");
     signTransaction = (sign_transaction_t)dlsym(wlt_mod, "signTransaction");
