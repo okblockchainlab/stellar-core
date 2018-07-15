@@ -22,7 +22,6 @@ add_dependencies(stellar_core_deps proj_stellar_core)
 ################################################################################
 
 set(STELLAR_CORE_SOURCE
-	${PROJECT_SOURCE_DIR}/../src/main/StellarCoreVersion.cpp
 	${PROJECT_SOURCE_DIR}/../src/bucket/Bucket.cpp
 	${PROJECT_SOURCE_DIR}/../src/bucket/BucketApplicator.cpp
 	${PROJECT_SOURCE_DIR}/../src/bucket/BucketInputIterator.cpp
@@ -255,6 +254,7 @@ set(WALLET_LIB_SOURCE
   wallet.cpp
   app_wrapper.cpp
   config.cpp
+  StellarCoreVersionWrapper.cpp
 )
 
 include_directories(${PROJECT_SOURCE_DIR}/..)
