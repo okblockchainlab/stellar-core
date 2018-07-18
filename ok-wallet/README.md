@@ -1,12 +1,14 @@
 ### 编译
 
-1. cd ok-wallet
-2. mkdir build
-3. cd build
-4. cmake ..(for release version, run cmake .. -DCMAKE_BUILD_TYPE=Release)
-5. make
-6. ls *.so
-7. ls *.dylib
+```shell
+cd ok-wallet
+mkdir build
+cd build
+cmake ..(for release version, run cmake .. -DCMAKE_BUILD_TYPE=Release)
+make
+ls *.so
+ls *.dylib
+```
 
 ### 注意项
 - **commitTransaction函数将交易提交后，会一直运行，不会退出**。目的是为了给stellar系统足够的时间将交易广播出去，使交易真正生效。因此当运行test_okwallet测试程序时，程序不会主动退出，除非按下ctrl+C键。
