@@ -1,26 +1,3 @@
-set($ENV{CXXFLAGS} "$ENV{CXXFLAGS} -fPIC")
-set($ENV{CFLAGS} "$ENV{CFLAGS} -fPIC")
-set($ENV{CC} "$ENV{CC} -fPIC")
-
-ExternalProject_Add (proj_stellar_core
-	PREFIX ${PROJECT_SOURCE_DIR}/..
-	SOURCE_DIR ${PROJECT_SOURCE_DIR}/..
-	INSTALL_DIR ${PROJECT_BINARY_DIR}/deps-install
-	TMP_DIR ${PROJECT_BINARY_DIR}/deps-tmp/stellar-core
-	STAMP_DIR ${PROJECT_BINARY_DIR}/deps-stamp/stellar-core
-	CONFIGURE_COMMAND COMMAND <SOURCE_DIR>/autogen.sh COMMAND CXXFLAGS=-fPIC CFLAGS=-fPIC <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> --disable-postgres --enable-shared=yes --disable-pie
-	INSTALL_COMMAND ""
-	BUILD_IN_SOURCE 1
-)
-ExternalProject_Get_Property(proj_stellar_core source_dir)
-add_library(stellar_core_deps STATIC IMPORTED)
-set_target_properties(stellar_core_deps PROPERTIES
-	IMPORTED_LOCATION ${source_dir}/src/stellar-core
-)
-add_dependencies(stellar_core_deps proj_stellar_core)
-
-################################################################################
-
 set(STELLAR_CORE_SOURCE
 	${PROJECT_SOURCE_DIR}/../src/bucket/Bucket.cpp
 	${PROJECT_SOURCE_DIR}/../src/bucket/BucketApplicator.cpp
@@ -274,13 +251,15 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   include_directories($ENV{JAVA_HOME}/include/linux)
 endif()
 
-link_directories(${PROJECT_SOURCE_DIR}/../lib)
-link_directories(${PROJECT_SOURCE_DIR}/../lib/libsodium/src/libsodium/.libs)
-link_directories(${PROJECT_SOURCE_DIR}/../lib/xdrpp/xdrpp)
-
-add_library(stellar-core SHARED ${STELLAR_CORE_SOURCE} ${WALLET_LIB_SOURCE})
-target_link_libraries(stellar-core xdrpp libsodium.a soci medida 3rdparty libpq.a)
-add_dependencies(stellar-core stellar_core_deps)
+add_library(${OKLIBRARY_NAME} SHARED ${STELLAR_CORE_SOURCE} ${WALLET_LIB_SOURCE})
+target_link_libraries(${OKLIBRARY_NAME}
+  ${PROJECT_SOURCE_DIR}/../lib/xdrpp/xdrpp/libxdrpp.a
+	${PROJECT_SOURCE_DIR}/../lib/libsodium/src/libsodium/.libs/libsodium.a
+	${PROJECT_SOURCE_DIR}/../lib/libsoci.a
+	${PROJECT_SOURCE_DIR}/../lib/libmedida.a
+	${PROJECT_SOURCE_DIR}/../lib/lib3rdparty.a
+	$ENV{COIN_DEPS}/libpq/lib/libpq.a
+)
 
 ################################################################################
 ExternalProject_Add (proj_gtest

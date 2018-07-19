@@ -1,14 +1,19 @@
 ### 编译
 
+##### centos7的编译依赖项
 ```shell
-cd ok-wallet
-mkdir build
-cd build
-cmake ..(for release version, run cmake .. -DCMAKE_BUILD_TYPE=Release)
-make
-ls *.so
-ls *.dylib
+sudo yum install git build-essential pkg-config autoconf automake libtool bison flex gcc
 ```
+项目中用到了c++14标准，但centos的源上的gcc一般版本都比较低不支持c++14，所以有可能需要下载gcc源码手工编译安装。
+
+
+##### 编译步骤
+- git clone https://github.com/okblockchainlab/stellar-core.git
+- cd stellar-core
+- mkdir depslib
+- export COIN_DEPS=`pwd`/depslib
+- ./build.sh (only run this script if you first time build the project)
+- ./runbuild.sh
 
 ### 注意项
 - **commitTransaction函数将交易提交后，会一直运行，不会退出**。目的是为了给stellar系统足够的时间将交易广播出去，使交易真正生效。因此当运行test_okwallet测试程序时，程序不会主动退出，除非按下ctrl+C键。

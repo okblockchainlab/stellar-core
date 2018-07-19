@@ -83,3 +83,6 @@
 **/.vs/*
 
 ok-wallet/build/*
+ok-build/*
+depslib/*
+libdownload/*

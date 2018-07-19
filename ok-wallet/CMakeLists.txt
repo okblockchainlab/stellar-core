@@ -9,6 +9,14 @@ if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+if (NOT OKLIBRARY_NAME)
+  set(OKLIBRARY_NAME stellar-core)
+endif()
+
+if (NOT DEFINED ENV{COIN_DEPS})
+  message(FATAL_ERROR "undefined COIN_DEPS environment variable")
+endif()
+
 set(CMAKE_C_FLAGS_DEBUG "$ENV{CFLAGS} -O0 -Wall -g -ggdb")
 set(CMAKE_C_FLAGS_RELEASE "$ENV{CFLAGS} -O3 -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CFLAGS} -O0 -Wall -g -ggdb")
