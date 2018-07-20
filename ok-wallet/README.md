@@ -2,7 +2,8 @@
 
 ##### centos7的编译依赖项
 ```shell
-sudo yum install git build-essential pkg-config autoconf automake libtool bison flex gcc
+sudo yum install autoconf automake libtool bison flex gcc
+sudo yum install glibc-static libstdc++-static
 ```
 项目中用到了c++14标准，但centos的源上的gcc一般版本都比较低不支持c++14，所以有可能需要下载gcc源码手工编译安装。
 
