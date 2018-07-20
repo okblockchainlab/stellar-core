@@ -12,7 +12,7 @@ sudo yum install glibc-static libstdc++-static
 - git clone https://github.com/okblockchainlab/stellar-core.git
 - cd stellar-core
 - mkdir depslib
-- export COIN_DEPS=`pwd`/depslib
+- export COIN_DEPS=\`pwd\`/depslib
 - ./build.sh (only run this script if you first time build the project)
 - ./runbuild.sh
 
