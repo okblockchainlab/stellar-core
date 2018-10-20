@@ -18,8 +18,8 @@ static const pair_t test_pair2 = {
 };
 
 typedef bool (*get_address_t)(const std::string& seed, std::string& address);
-typedef bool (*produce_unsigned_tx_t)(const std::string& from, const std::string& to, const std::string& amount, const std::string& net_type, const char* data_dir, std::vector<uint8_t>& utx);
-typedef bool (*sign_transaction_t)(const std::vector<uint8_t>& utx, const std::string& seed, const std::string& net_type, const char* data_dir, std::vector<uint8_t>& stx);
+typedef bool (*produce_unsigned_tx_t)(const std::string& from, const std::string& to, const std::string& amount, const std::string& fee, const std::string& seqNum, std::vector<uint8_t>& utx);
+typedef bool (*sign_transaction_t)(const std::vector<uint8_t>& utx, const std::string& seed, const std::string& net_type, std::vector<uint8_t>& stx);
 typedef bool (*commit_transaction_t)(const std::vector<uint8_t>& stx, const std::string& net_type, const char* data_dir, std::string& result_str);
 
 class OKWalletTest : public ::testing::Test {
@@ -72,29 +72,29 @@ TEST_F(OKWalletTest, produceUnsignedTx) {
   std::vector<uint8_t> expect_tx = {1, 2, 3};
   std::vector<uint8_t> utx;
 
-  ASSERT_TRUE(produceUnsignedTx(test_pair1.address, test_pair2.address, "100", "testnet", ".", utx));
+  ASSERT_TRUE(produceUnsignedTx(test_pair1.address, test_pair2.address, "100", "1", "212", utx));
   ASSERT_TRUE(utx.size() > 0);
 }
 
 TEST_F(OKWalletTest, signTransaction) {
   std::vector<uint8_t> utx;
 
-  ASSERT_TRUE(produceUnsignedTx(test_pair1.address, test_pair2.address, "100", "testnet", ".", utx));
+  ASSERT_TRUE(produceUnsignedTx(test_pair1.address, test_pair2.address, "100", "", "121", utx));
   ASSERT_TRUE(utx.size() > 0);
 
   std::vector<uint8_t> stx;
-  ASSERT_TRUE(signTransaction(utx, test_pair1.seed, "testnet", ".", stx));
+  ASSERT_TRUE(signTransaction(utx, test_pair1.seed, "testnet", stx));
   ASSERT_TRUE(stx.size() > utx.size());
 }
 
 TEST_F(OKWalletTest, commitTransaction) {
   std::vector<uint8_t> utx;
 
-  ASSERT_TRUE(produceUnsignedTx(test_pair1.address, test_pair2.address, "100", "testnet", ".", utx));
+  ASSERT_TRUE(produceUnsignedTx(test_pair1.address, test_pair2.address, "100", "", "10", utx));
   ASSERT_TRUE(utx.size() > 0);
 
   std::vector<uint8_t> stx;
-  ASSERT_TRUE(signTransaction(utx, test_pair1.seed, "testnet", ".", stx));
+  ASSERT_TRUE(signTransaction(utx, test_pair1.seed, "testnet", stx));
   ASSERT_TRUE(stx.size() > utx.size());
 
   std::string resstr;

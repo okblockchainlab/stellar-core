@@ -10,7 +10,7 @@
 #include "com_okcoin_vault_jni_stellar_Stellarj.h"
 #include <regex>
 
-void loadConfig(const std::string& net_type, const char* data_dir, bool listen, stellar::Config& cfg);
+void loadConfig(const std::string& net_type, const char* datadir, bool listen, stellar::Config& cfg);
 
 std::string bytes2string(const std::vector<uint8_t>& byte_vec)
 {
@@ -129,33 +129,24 @@ bool GetAddressFromPrivateKey(const std::string& seed, std::string& address)
 
 extern "C"
 bool
-produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount, const std::string& net_type, const char* data_dir, std::vector<uint8_t>& utx)
+produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount, const std::string& fee, const std::string& seqNum, std::vector<uint8_t>& utx)
 {
   utx.clear();
 
-  AppWrapper aw(net_type, data_dir);
-  if (!aw.update_ledger()) {
-    return false;
-  }
-
   stellar::PublicKey from_pkey = stellar::KeyUtils::fromStrKey<stellar::PublicKey>(from);
   stellar::PublicKey to_pkey = stellar::KeyUtils::fromStrKey<stellar::PublicKey>(to);
-
-  auto from_acc = aw.loadAccount(from_pkey);
-  if (!from_acc) {
-      return false;
-  }
 
   std::vector<stellar::Operation> ops = {stellar::txtest::payment(to_pkey, std::atoll(amount.c_str()))};
 
   auto e = stellar::TransactionEnvelope{};
   e.tx.sourceAccount = from_pkey;
-  //TODO: does here need to config basefee?
-  //I use value of app.getLedgerManager().getTxFee() for simplify the code,
+  //NOTE: Using value of app.getLedgerManager().getTxFee() for simplify the code,
   //which is 100 for now.
-  e.tx.fee = static_cast<uint32_t>(
-      (ops.size() * 100) & UINT32_MAX);
-  e.tx.seqNum = /*from_acc.nextSequenceNumber();*/from_acc->getSeqNum() + 1;
+  if (fee.empty())
+    e.tx.fee = static_cast<uint32_t>((ops.size() * 100) & UINT32_MAX);
+  else
+    e.tx.fee = std::stoul(fee);
+  e.tx.seqNum = std::atoll(seqNum.c_str());
   std::copy(std::begin(ops), std::end(ops), std::back_inserter(e.tx.operations));
 
   utx = xdr::xdr_to_opaque(e);
@@ -164,10 +155,10 @@ produceUnsignedTx(const std::string& from, const std::string& to, const std::str
 
 extern "C"
 bool
-signTransaction(const std::vector<uint8_t>& utx, const std::string& seed, const std::string& net_type, const char* data_dir, std::vector<uint8_t>& stx)
+signTransaction(const std::vector<uint8_t>& utx, const std::string& seed, const std::string& net_type, std::vector<uint8_t>& stx)
 {
   stellar::Config cfg;
-  loadConfig(net_type, data_dir, false, cfg);
+  loadConfig(net_type, ".", false, cfg);
   const auto network_id = stellar::sha256(cfg.NETWORK_PASSPHRASE); //app.getNetworkID
 
   auto from_skey = stellar::SecretKey::fromStrKeySeed(seed);
@@ -268,11 +259,16 @@ Java_com_okcoin_vault_jni_stellar_Stellarj_execute(JNIEnv *env, jclass, jstring 
     },
     {
       "createrawtransaction", [env, &networkType](const std::vector<std::string>& args)->jobjectArray {
-        assert(4 == args.size());
+        assert(4 == args.size() || 5 == args.size());
+
+        std::string fee;
+        if (5 == args.size()) {
+          fee = args[4];
+        }
 
         std::vector<uint8_t> utx;
         const std::string& net_type = jstring2stdstring(env, networkType);
-        if (true != produceUnsignedTx(args[0], args[1], args[2], net_type, args[3].c_str(), utx)) {
+        if (true != produceUnsignedTx(args[0], args[1], args[2], fee, args[3], utx)) {
           utx.clear();
         }
 
@@ -281,12 +277,12 @@ Java_com_okcoin_vault_jni_stellar_Stellarj_execute(JNIEnv *env, jclass, jstring 
     },
     {
       "signrawtransaction", [env, &networkType](const std::vector<std::string>& args)->jobjectArray {
-        assert(3 == args.size());
+        assert(2 == args.size());
 
         std::vector<uint8_t> stx;
         const auto& utx = string2bytes(args[0]);
         const std::string& net_type = jstring2stdstring(env, networkType);
-        if (true != signTransaction(utx, args[1], net_type, args[2].c_str(), stx)) {
+        if (true != signTransaction(utx, args[1], net_type, stx)) {
           stx.clear();
         }
 

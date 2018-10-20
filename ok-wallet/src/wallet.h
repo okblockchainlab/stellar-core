@@ -24,13 +24,12 @@ bool GetAddressFromPrivateKey(const std::string& seed, std::string& address);
 extern "C"
 __attribute__ ((visibility("default")))
 bool
-signTransaction(const std::vector<uint8_t>& utx, const std::string& seed, const std::string& net_type, const char* data_dir, std::vector<uint8_t>& stx);
+produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount, const std::string& fee, const std::string& seqNum, std::vector<uint8_t>& utx);
 
-//hot
 extern "C"
 __attribute__ ((visibility("default")))
 bool
-produceUnsignedTx(const std::string& from, const std::string& to, const std::string& amount, const std::string& net_type, const char* data_dir, std::vector<uint8_t>& utx);
+signTransaction(const std::vector<uint8_t>& utx, const std::string& seed, const std::string& net_type, std::vector<uint8_t>& stx);
 
 extern "C"
 __attribute__ ((visibility("default")))

@@ -258,7 +258,7 @@ target_link_libraries(${OKLIBRARY_NAME}
 	${PROJECT_SOURCE_DIR}/../lib/libsoci.a
 	${PROJECT_SOURCE_DIR}/../lib/libmedida.a
 	${PROJECT_SOURCE_DIR}/../lib/lib3rdparty.a
-	$ENV{COIN_DEPS}/libpq/lib/libpq.a
+	#$ENV{COIN_DEPS}/libpq/lib/libpq.a
 )
 
 ################################################################################
